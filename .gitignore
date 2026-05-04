@@ -1,0 +1,15 @@
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.log
+*.err.log
+*.tsbuildinfo
+__pycache__/
+*.pyc
+.env
+playwright-report/
+test-results/
+playwright-*.png
+.DS_Store
+Thumbs.db

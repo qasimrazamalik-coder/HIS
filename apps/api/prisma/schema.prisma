@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  NURSE
+  BILLING
+  LAB_TECH
+  INVENTORY_MANAGER
+  PATIENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SUBMITTED
+  PAID
+  DENIED
+  OVERDUE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  patientProfile Patient? @relation("PatientAccount")
+  auditLogs      AuditLog[]
+}
+
+model Patient {
+  id                    String   @id @default(uuid())
+  mrn                   String   @unique
+  firstName             String
+  lastName              String
+  dateOfBirth           DateTime
+  phone                 String?
+  email                 String?
+  encryptedHistory      String?
+  encryptedHistoryNonce String?
+  accountId             String?  @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  account      User?         @relation("PatientAccount", fields: [accountId], references: [id])
+  appointments Appointment[]
+  encounters   Encounter[]
+  labOrders    LabOrder[]
+  invoices     Invoice[]
+
+  @@index([lastName, firstName])
+  @@index([dateOfBirth])
+}
+
+model Appointment {
+  id        String            @id @default(uuid())
+  patientId String
+  doctorId  String
+  startsAt  DateTime
+  endsAt    DateTime
+  status    AppointmentStatus @default(SCHEDULED)
+  reason    String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([doctorId, startsAt])
+  @@index([patientId, startsAt])
+}
+
+model Encounter {
+  id          String   @id @default(uuid())
+  patientId   String
+  clinicianId String
+  diagnosis   String
+  notes       String
+  prescription String?
+  createdAt   DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  labResults LabResult[]
+
+  @@index([patientId, createdAt])
+}
+
+model LabOrder {
+  id        String   @id @default(uuid())
+  patientId String
+  orderedBy String
+  testCode  String
+  status    String   @default("ORDERED")
+  createdAt DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  results LabResult[]
+}
+
+model LabResult {
+  id          String   @id @default(uuid())
+  labOrderId  String
+  encounterId String?
+  value       String
+  unit        String?
+  abnormal    Boolean  @default(false)
+  resultedAt  DateTime @default(now())
+
+  order     LabOrder   @relation(fields: [labOrderId], references: [id])
+  encounter Encounter? @relation(fields: [encounterId], references: [id])
+}
+
+model Invoice {
+  id        String        @id @default(uuid())
+  patientId String
+  amountCents Int
+  status    InvoiceStatus @default(DRAFT)
+  insurer   String?
+  claimRef  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  amountCents Int
+  method      String
+  paidAt      DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model InventoryItem {
+  id              String   @id @default(uuid())
+  sku             String   @unique
+  name            String
+  quantityOnHand  Int
+  reorderPoint    Int
+  supplier         String?
+  updatedAt        DateTime @updatedAt
+
+  @@index([quantityOnHand])
+}
+
+model TelemedicineSession {
+  id          String   @id @default(uuid())
+  patientId   String
+  clinicianId String
+  visitUrl    String
+  status      String   @default("SCHEDULED")
+  startsAt    DateTime
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
