@@ -51,7 +51,6 @@ This project includes security controls that are expected in a HIPAA-aligned eng
 - Smart AI, blockchain integrity, and voice-assistant surfaces
 - Enterprise bed board, FHIR-style exchange, collaboration room, offline sync, and readiness APIs
 - Kubernetes deployment baseline, OpenAPI slice, architecture diagram, and k6 smoke load test
-- Separate AI Support Agent RAG application with FastAPI, ChromaDB, React, JWT roles, document upload, citations, and Docker Compose
 - Three.js 3D hospital capacity/risk visualization
 - Chart.js trend and distribution charts
 - GraphQL dashboard summary query for advanced clients

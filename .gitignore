@@ -11,6 +11,5 @@ __pycache__/
 playwright-report/
 test-results/
 playwright-*.png
-services/rag-api/data/
 .DS_Store
 Thumbs.db
